@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>良川 | 良川</title><meta name="author" content="良川"><meta name="copyright" content="良川"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="数据文件存储和读取一个完整的数据分析流程，通常会经历 4 个大的步骤，分别是：数据采集读取 → 数据清洁及预处理 → 数据建模 → 数据分析报告。你可以看到，数据采集读取是整个分析流程的第一步，也是非常重要的一步。因为，数据是不可能凭空出现的。只有手中有数据，我们才可以执行后面的步骤。  常用数据文件格式数据文件是非常常见的数据储存方式，适合于小规模数据。例如，公司通过调查问卷的方式收集了大量的数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="良川">
+<meta property="og:url" content="http://example.com/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/index.html">
+<meta property="og:site_name" content="良川">
+<meta property="og:description" content="数据文件存储和读取一个完整的数据分析流程，通常会经历 4 个大的步骤，分别是：数据采集读取 → 数据清洁及预处理 → 数据建模 → 数据分析报告。你可以看到，数据采集读取是整个分析流程的第一步，也是非常重要的一步。因为，数据是不可能凭空出现的。只有手中有数据，我们才可以执行后面的步骤。  常用数据文件格式数据文件是非常常见的数据储存方式，适合于小规模数据。例如，公司通过调查问卷的方式收集了大量的数">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg">
+<meta property="article:published_time" content="2021-05-02T04:46:01.917Z">
+<meta property="article:modified_time" content="2021-05-02T08:02:02.622Z">
+<meta property="article:author" content="良川">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-05-02 16:02:02'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首頁</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">良川</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首頁</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">无题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-05-02T04:46:01.917Z" title="发表于 2021-05-02 12:46:01">2021-05-02</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-05-02T08:02:02.622Z" title="更新于 2021-05-02 16:02:02">2021-05-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Python/">Python</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="数据文件存储和读取"><a href="#数据文件存储和读取" class="headerlink" title="数据文件存储和读取"></a>数据文件存储和读取</h1><p>一个完整的数据分析流程，通常会经历 4 个大的步骤，分别是：<strong>数据采集读取 → 数据清洁及预处理 → 数据建模 → 数据分析报告</strong>。你可以看到，数据采集读取是整个分析流程的第一步，也是非常重要的一步。因为，数据是不可能凭空出现的。只有手中有数据，我们才可以执行后面的步骤。</p>
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547556244052.png" alt="1547556244052"></p>
+<h2 id="常用数据文件格式"><a href="#常用数据文件格式" class="headerlink" title="常用数据文件格式"></a>常用数据文件格式</h2><p>数据文件是非常常见的数据储存方式，适合于小规模数据。例如，公司通过调查问卷的方式收集了大量的数据，一般导出之后就是一个数据文件。再例如，数据分析人员一般没有权限直接连接公司数据库，那么你拿到手中的数据就可能是数据库管理员给你导出之后的数据文件。</p>
+<p>当我们使用 Python 读取数据文件时，首先推荐的就是通过 Pandas 完成，Pandas 几乎支持所有常见的数据文件格式。</p>
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547556404989.png" alt="1547556404989"></p>
+<h2 id="Excel-和-CSV-格式"><a href="#Excel-和-CSV-格式" class="headerlink" title="Excel 和 CSV 格式"></a>Excel 和 CSV 格式</h2><p>上面的表格中，相信你最熟悉的是 Excel 表格数据文件。由于 Excel 表格有最大的行数储存限制（16,384 列 × 1,048,576 行），所以更多时候我们会使用 CSV 来储存表格数据。</p>
+<p>CSV 的英文是 Comma-Separated Values，其实就是通过字符分割数据并以纯文本形式存储。这里的分割字符我们一般会使用逗号，所以往往也称 CSV 文件为逗号分隔符文件。纯文本意味着该文件是一个字符序列，不含必须像二进制数字那样被解读的数据，也没有最大行数的储存限制。</p>
+<p>下面，我们尝试读取 Excel 和 CSV 格式的示例数据文件。首先，我们需要生成不同类型的数据示例文件。下面这段代码直接点击运行即可，将会在目录下方生成两个最常用的数据文件 <code>test.csv</code> 和 <code>test.xlsx</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"></span><br><span class="line"><span class="comment"># 生成示例数据</span></span><br><span class="line">df = pd.DataFrame(&#123;<span class="string">&#x27;A&#x27;</span>: np.random.randn(<span class="number">10</span>), <span class="string">&#x27;B&#x27;</span>: np.random.randn(<span class="number">10</span>)&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 写入数据文件</span></span><br><span class="line">df.to_csv(<span class="string">&#x27;test.csv&#x27;</span>, index=<span class="literal">None</span>)  <span class="comment"># CSV</span></span><br><span class="line">df.to_excel(<span class="string">&#x27;test.xlsx&#x27;</span>, index=<span class="literal">None</span>)  <span class="comment"># EXCEL</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;*****示例文件写入成功*****&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>下面，我们学习使用 Pandas 读取文件的方法，直接运用上面表格中的 API 即可。CSV 文件读取是 <code>read_csv</code>，而 Excel 文件读取是 <code>read_excel</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pd.read_csv(<span class="string">&#x27;test.csv&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547556789236.png" alt="1547556789236"></p>
+<p>当你读取 Excel 文件时，首先需要安装 <code>openpyxl</code> 模块，不然就会报错。安装该模块的命令为：<code>pip install openpyxl</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pd.read_excel(<span class="string">&#x27;test.xlsx&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547556857467.png" alt="1547556857467"></p>
+<p>通过 Pandas 读取处理的数据会自动以表格样式呈现，这也就是 Pandas 特有的数据格式：DataFrame。在学习数据分析的生涯中，DataFrame 将会成为你最容易听到的名词之一。Pandas 的所有数据操作都是针对于 DataFrame 进行。</p>
+<p>特别地，我们会将 Pandas 中的一维数据类型称之为 Series，三维数据称之为 Panel。但实际上，它们都可以看作是特殊的 DataFrame。</p>
+<h2 id="HDF5-格式"><a href="#HDF5-格式" class="headerlink" title="HDF5 格式"></a>HDF5 格式</h2><p>HDF（英语：Hierarchical Data Format）指一种为存储和处理大容量科学数据设计的文件格式及相应库文件。HDF5 格式的特点在于能存储多个数据集，并且支持 <code>metadata</code>。</p>
+<p>HDF5 文件包含两种基本数据对象：</p>
+<ul>
+<li>群组（group）：类似文件夹，可以包含多个数据集或下级群组。</li>
+<li>数据集（dataset）：数据内容，可以是多维数组，也可以是更复杂的数据类型。</li>
+</ul>
+<p>群组和数据集都支持元数据 <code>metadata</code>，用户可以自定义其属性，提供附加信息。元数据类似于「数据的数据」，它能够用来说明数据的特征和其他属性。</p>
+<p>HDF5 的好处在于，你不仅可以使用 Python 存储和读取，目前还被 Java，MATLAB/Scilab，Octave，IDL，Julia, R 等语言或商业软件支持。</p>
+<p>下面，我们同样尝试使用 Pandas 来存储和读取 HDF5 数据。和 Excel 文件读取相似，我们需要先安装一个依赖模块 PyTables，命令为：<code>pip install tables</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">df1 = pd.DataFrame(&#123;<span class="string">&#x27;A&#x27;</span>: np.random.randn(<span class="number">10</span>), <span class="string">&#x27;B&#x27;</span>: np.random.randn(<span class="number">10</span>)&#125;)  <span class="comment"># 随机数据</span></span><br><span class="line">df2 = pd.DataFrame(&#123;<span class="string">&#x27;C&#x27;</span>: np.random.randn(<span class="number">10</span>), <span class="string">&#x27;D&#x27;</span>: np.random.randn(<span class="number">10</span>)&#125;)  <span class="comment"># 随机数据</span></span><br><span class="line"></span><br><span class="line">df1.to_hdf(<span class="string">&#x27;test.h5&#x27;</span>, key=<span class="string">&#x27;df1&#x27;</span>)  <span class="comment"># 存储 df1</span></span><br><span class="line">df2.to_hdf(<span class="string">&#x27;test.h5&#x27;</span>, key=<span class="string">&#x27;df2&#x27;</span>, <span class="built_in">format</span>=<span class="string">&#x27;table&#x27;</span>)  <span class="comment"># 存储 df2 </span></span><br></pre></td></tr></table></figure>
+
+<p>上面的代码中，我们通过指定 <code>key</code> 向 HDF 文件中存储了 2 个不同的数据集 <code>df1</code> 和 <code>df2</code>。那么，接下来我们尝试读取。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pd.read_hdf(<span class="string">&#x27;test.h5&#x27;</span>, key=<span class="string">&#x27;df1&#x27;</span>)  <span class="comment"># 读取 df1 </span></span><br></pre></td></tr></table></figure>
+
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547557062683.png" alt="1547557062683"></p>
+<p><code>df2</code> 后面指定了 <code>format=&#39;table&#39;</code> 参数。这是因为，HDF 支持两种存储架构：fixed 和table。默认为 <code>fixed</code>，因为其读取速度更快，但是 <code>table</code> 却支持查询操作。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 读取 df2 中 index &lt; 5 的数据</span></span><br><span class="line">pd.read_hdf(<span class="string">&#x27;test.h5&#x27;</span>, key=<span class="string">&#x27;df2&#x27;</span>, where=[<span class="string">&#x27;index &lt; 5&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547557133387.png" alt="1547557133387"></p>
+<h2 id="JSON-格式"><a href="#JSON-格式" class="headerlink" title="JSON 格式"></a>JSON 格式</h2><p>JSON（英文：JavaScript Object Notation）是一种由道格拉斯·克罗克福特构想和设计、轻量级的数据交换语言，该语言以易于让人阅读的文字为基础，用来传输由属性值或者序列性的值组成的数据对象。尽管 JSON 是 JavaScript 的一个子集，但 JSON 是独立于语言的文本格式。</p>
+<p>JSON 数据格式与语言无关，脱胎于 JavaScript，但目前很多编程语言都支持 JSON 格式数据的生成和解析。JSON 的官方 MIME 类型是 application/json，文件扩展名是 <code>.json</code>。</p>
+<p>一段 JSON 的示例数据：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">obj = &quot;&quot;&quot; </span><br><span class="line">[</span><br><span class="line">&#123;</span><br><span class="line"><span class="attr">&quot;aqi&quot;</span>: <span class="number">46</span>,</span><br><span class="line"><span class="attr">&quot;area&quot;</span>: <span class="string">&quot;成都&quot;</span>,</span><br><span class="line"><span class="attr">&quot;pm2_5&quot;</span>: <span class="number">32</span>,</span><br><span class="line"><span class="attr">&quot;pm2_5_24h&quot;</span>: <span class="number">33</span>,</span><br><span class="line"><span class="attr">&quot;position_name&quot;</span>: <span class="string">&quot;金泉两河&quot;</span>,</span><br><span class="line"><span class="attr">&quot;primary_pollutant&quot;</span>: <span class="literal">null</span>,</span><br><span class="line"><span class="attr">&quot;quality&quot;</span>: <span class="string">&quot;优&quot;</span>,</span><br><span class="line"><span class="attr">&quot;station_code&quot;</span>: <span class="string">&quot;1431A&quot;</span>,</span><br><span class="line"><span class="attr">&quot;time_point&quot;</span>: <span class="string">&quot;2018-09-05T09:00:00Z&quot;</span></span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line"><span class="attr">&quot;aqi&quot;</span>: <span class="number">29</span>,</span><br><span class="line"><span class="attr">&quot;area&quot;</span>: <span class="string">&quot;成都&quot;</span>,</span><br><span class="line"><span class="attr">&quot;pm2_5&quot;</span>: <span class="number">20</span>,</span><br><span class="line"><span class="attr">&quot;pm2_5_24h&quot;</span>: <span class="number">26</span>,</span><br><span class="line"><span class="attr">&quot;position_name&quot;</span>: <span class="string">&quot;十里店&quot;</span>,</span><br><span class="line"><span class="attr">&quot;primary_pollutant&quot;</span>: <span class="literal">null</span>,</span><br><span class="line"><span class="attr">&quot;quality&quot;</span>: <span class="string">&quot;优&quot;</span>,</span><br><span class="line"><span class="attr">&quot;station_code&quot;</span>: <span class="string">&quot;1432A&quot;</span>,</span><br><span class="line"><span class="attr">&quot;time_point&quot;</span>: <span class="string">&quot;2018-09-05T09:00:00Z&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">]</span><br><span class="line"><span class="string">&quot;&quot;</span><span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>JSON 数据中 <code>key</code> 必须是字符串类型，缺失值用 <code>null</code> 表示。其中还可能包含的基本类型有：字典，列表，字符串，数值，布尔值等。</p>
+<p>Pandas 中的 <code>read_json</code> 往往能直接吧 JSON 解析为 DataFrame。</p>
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547557312295.png" alt="1547557312295"></p>
+<p>Python 中有许多能够储存和解析 JSON 的库，这里推荐使用内建库 <code>json</code>。上面给出的 <code>obj</code> 其实是字符串，如果想要将其转换为 Python 的数据类型（Python Object），那么就可以使用 <code>json.loads(obj)</code> 完成。</p>
+<p><img src="C:\Users\miao\AppData\Roaming\Typora\typora-user-images\1547557373524.png" alt="1547557373524"></p>
+<p>读取「金泉两河」地名：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">obj[<span class="number">0</span>][<span class="string">&#x27;position_name&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>除此之外，使用 <code>json.dumps</code> 可以把 Python Object 转换为 JSON 类型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.dumps(obj)</span><br></pre></td></tr></table></figure>
+
+<h2 id="read-操作参数详解"><a href="#read-操作参数详解" class="headerlink" title="read_ 操作参数详解"></a><code>read_</code> 操作参数详解</h2><p>Pandas 中的 <code>read_</code> 操作可不仅仅是加载数据文件这么简单，它带有的一些参数可以实现更加个性化的读取结果。我们以 <code>pandas.read_csv()</code> 的 API 为例。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pandas.read_csv(filepath_or_buffer, sep=<span class="string">&#x27;, &#x27;</span>, delimiter=<span class="literal">None</span>, header=<span class="string">&#x27;infer&#x27;</span>, names=<span class="literal">None</span>, index_col=<span class="literal">None</span>, usecols=<span class="literal">None</span>, squeeze=<span class="literal">False</span>, prefix=<span class="literal">None</span>, mangle_dupe_cols=<span class="literal">True</span>, dtype=<span class="literal">None</span>, engine=<span class="literal">None</span>, converters=<span class="literal">None</span>, true_values=<span class="literal">None</span>, false_values=<span class="literal">None</span>, skipinitialspace=<span class="literal">False</span>, skiprows=<span class="literal">None</span>, nrows=<span class="literal">None</span>, na_values=<span class="literal">None</span>, keep_default_na=<span class="literal">True</span>, na_filter=<span class="literal">True</span>, verbose=<span class="literal">False</span>, skip_blank_lines=<span class="literal">True</span>, parse_dates=<span class="literal">False</span>, infer_datetime_format=<span class="literal">False</span>, keep_date_col=<span class="literal">False</span>, date_parser=<span class="literal">None</span>, dayfirst=<span class="literal">False</span>, iterator=<span class="literal">False</span>, chunksize=<span class="literal">None</span>, compression=<span class="string">&#x27;infer&#x27;</span>, thousands=<span class="literal">None</span>, decimal=<span class="string">b&#x27;.&#x27;</span>, lineterminator=<span class="literal">None</span>, quotechar=<span class="string">&#x27;&quot;&#x27;</span>, quoting=<span class="number">0</span>, escapechar=<span class="literal">None</span>, comment=<span class="literal">None</span>, encoding=<span class="literal">None</span>, dialect=<span class="literal">None</span>, tupleize_cols=<span class="literal">None</span>, error_bad_lines=<span class="literal">True</span>, warn_bad_lines=<span class="literal">True</span>, skipfooter=<span class="number">0</span>, doublequote=<span class="literal">True</span>, delim_whitespace=<span class="literal">False</span>, low_memory=<span class="literal">True</span>, memory_map=<span class="literal">False</span>, float_precision=<span class="literal">None</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>path</code>：路径不仅仅可以读取本地文件，还支持远程 URL 链接。</li>
+<li><code>sep</code>：支持按特定字符分割。</li>
+<li><code>header</code>：可以指定某一行为列名，默认是第一行。</li>
+<li><code>names</code>：自定义列名。</li>
+<li><code>skiprows</code>：指定忽略某些行。</li>
+<li><code>na_values</code>：对空值进行指定替换操作。</li>
+<li><code>parse_dates</code>：尝试将数据解析为日期。</li>
+<li><code>nrows</code>：读取指定行数的数据。</li>
+<li><code>chunksize</code>：指定分块读取数据大小。</li>
+<li><code>encoding</code>：指定文件编码。</li>
+</ul>
+<p>上面的这些参数使得 Pandas 的数据文件读取功能非常强大。例如，如果你的 CSV 文件是使用分号 <code>;</code> 而不是逗号 <code>,</code> 分割，那么就可以通过 <code>sep=&#39;;&#39;</code> 让数据加载为正常的 DataFrame 格式。</p>
+<p>除此之外，像 <code>skiprows</code> 非常常用，它可以指定忽略某些行。，使得在加载数据时就可以对数据实现过滤，面对庞大且加载较慢的数据文件时特别好用</p>
+<h2 id="分块读取数据"><a href="#分块读取数据" class="headerlink" title="分块读取数据"></a>分块读取数据</h2><p>这里，我们特别介绍一下分块读取的方法。在很多时候，手中的数据集都非常大。例如当我们直接读取一个 GB 级别的 CSV 文件时，不仅速度很慢，还有可能因为内存不足而报错。此时，通过分块读取的方式加载数据文件就非常方便了。</p>
+<p>通过上面的 <code>read_</code> 参数可以看出，分块读取需要指定 <code>chunksize</code>，也就是每一块的大小。</p>
+<p>chunker<code>返回的</code>pandas.io.parsers.TextFileReader<code>是一个可迭代对象。你可以通过</code>get_chunk()` 逐次返回每一个块状数据的内容。你可以尝试多次运行下方单元格，以查看每次迭代的结果。分块读取是解决大文件读取慢的有效手段。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">chunker = pd.read_csv(<span class="string">&quot;test.csv&quot;</span>, chunksize=<span class="number">2</span>)</span><br><span class="line">chunker</span><br><span class="line">chunker.get_chunk() <span class="comment"># 迭代返回分块数据内容</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="实验总结"><a href="#实验总结" class="headerlink" title="实验总结"></a>实验总结</h2><p>本次实验中，我们重点介绍了实验 Pandas 读取和存储数据的方法。对常用的 Excel, CSV, HDF5, JSON 等数据格式做了介绍。同时，介绍了快速解析网页表格数据的方法。实验的最后，介绍了分块读取数据的方法，以便于读取较大的数据文件。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">良川</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/">http://example.com/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">良川</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva3.sinaimg.cn/large/c0cb27b0ly1gq43b5n22uj20lk0lkq66.jpg" target="_blank"><img class="post-qr-code-img" src="https://tva3.sinaimg.cn/large/c0cb27b0ly1gq43b5n22uj20lk0lkq66.jpg" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="https://tvax3.sinaimg.cn/large/c0cb27b0ly1gq43b8vfguj20pq0pqwi8.jpg" target="_blank"><img class="post-qr-code-img" src="https://tvax3.sinaimg.cn/large/c0cb27b0ly1gq43b8vfguj20pq0pqwi8.jpg" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/05/02/Linux%20%E5%AD%A6%E4%B9%A0%E4%B9%8B%E8%B7%AF/"><img class="prev-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info"></div></div></a></div><div class="next-post pull-right"><a href="/2021/04/08/hello-world/"><img class="next-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Hello World</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-info-avatar is-center"><img class="avatar-img" src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-info__name">良川</div><div class="author-info__description"></div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a></div><div class="card-info-data-item is-center"><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96"><span class="toc-number">1.</span> <span class="toc-text">数据文件存储和读取</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.1.</span> <span class="toc-text">常用数据文件格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Excel-%E5%92%8C-CSV-%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.2.</span> <span class="toc-text">Excel 和 CSV 格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HDF5-%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.3.</span> <span class="toc-text">HDF5 格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JSON-%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.4.</span> <span class="toc-text">JSON 格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#read-%E6%93%8D%E4%BD%9C%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.5.</span> <span class="toc-text">read_ 操作参数详解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%9D%97%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="toc-number">1.6.</span> <span class="toc-text">分块读取数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%80%BB%E7%BB%93"><span class="toc-number">1.7.</span> <span class="toc-text">实验总结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/05/02/Linux%20%E5%AD%A6%E4%B9%A0%E4%B9%8B%E8%B7%AF/" title="无题"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2021/05/02/Linux%20%E5%AD%A6%E4%B9%A0%E4%B9%8B%E8%B7%AF/" title="无题">无题</a><time datetime="2021-05-02T05:33:00.931Z" title="发表于 2021-05-02 13:33:00">2021-05-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/" title="无题"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2021/05/02/%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E5%92%8C%E8%AF%BB%E5%8F%96/" title="无题">无题</a><time datetime="2021-05-02T04:46:01.917Z" title="发表于 2021-05-02 12:46:01">2021-05-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/04/08/hello-world/" title="Hello World"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2021/04/08/hello-world/" title="Hello World">Hello World</a><time datetime="2021-04-08T05:36:41.000Z" title="发表于 2021-04-08 13:36:41">2021-04-08</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By 良川</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
