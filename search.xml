@@ -381,6 +381,19 @@
     </entry>
     
     
+    
+    <entry>
+      <title>Java并发</title>
+      <link href="2021/04/08/JUC/"/>
+      <url>2021/04/08/JUC/</url>
+      
+        <content type="html"><![CDATA[<h1 id="并发编程的基础"><a href="#并发编程的基础" class="headerlink" title="并发编程的基础"></a>并发编程的基础</h1><h2 id="共享资源"><a href="#共享资源" class="headerlink" title="共享资源"></a>共享资源</h2><p>堆是被所有线程共享的一块内存区域，在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例，Java中几乎所有的对象实例都在这里分配内存。</p><p>方法区与堆一样，也是各个线程共享的一块内存区域，它用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器编译后的代码缓存等数据。</p><p><img src="https://i.loli.net/2021/09/22/GjdBHMhAmNk184a.png" alt="image-20210922084326941"></p><h2 id="并发编程难点"><a href="#并发编程难点" class="headerlink" title="并发编程难点"></a>并发编程难点</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><ul><li>操作系统做任务切换，可以发生在任何一条CPU指令执行完成后；</li><li>CPU能保证的原子操作是指令级别的，而不是高级语言的操作符。</li></ul><p><img src="https://i.loli.net/2021/09/22/l39O6LVABmI85wr.png" alt="image-20210922084824324"></p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
   
   
 </search>
