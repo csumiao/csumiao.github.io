@@ -1,0 +1,599 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EventLoop和线程模型 | ahao</title><meta name="author" content="ahao"><meta name="copyright" content="ahao"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Netty Reactor 模型之单线程模型前言不同的线程模式，对于程序的性能差别是很大的，目前存在的线程模式主要有两种，分别是传统堵塞 I&#x2F;O 服务模型和 Reactor 模型。其中又根据 Reactor 的数量和处理资源池线程的数量不同具体分为以下几种模型，具体如下：  单 Reactor 单线程； 单 Reactor 多线程； 主从 Reactor 多线程。  本节内容，主要讲解传统堵塞 I">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EventLoop和线程模型">
+<meta property="og:url" content="https://ahao.ink/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="ahao">
+<meta property="og:description" content="Netty Reactor 模型之单线程模型前言不同的线程模式，对于程序的性能差别是很大的，目前存在的线程模式主要有两种，分别是传统堵塞 I&#x2F;O 服务模型和 Reactor 模型。其中又根据 Reactor 的数量和处理资源池线程的数量不同具体分为以下几种模型，具体如下：  单 Reactor 单线程； 单 Reactor 多线程； 主从 Reactor 多线程。  本节内容，主要讲解传统堵塞 I">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png">
+<meta property="article:published_time" content="2021-10-06T05:36:41.000Z">
+<meta property="article:modified_time" content="2021-12-24T08:54:45.226Z">
+<meta property="article:author" content="ahao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png"><link rel="shortcut icon" href="https://i.loli.net/2021/11/12/NAU53jI9mGOJlDC.png"><link rel="canonical" href="https://ahao.ink/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-24 16:54:45'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><link rel="stylesheet" href="APlayer.min.css"><div id="aplayer"></div><script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js" async></script><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const fontSizeVal = saveToLocal.get('global-font-size')
+    if (fontSizeVal !== undefined) {
+      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+    }
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" src="https://i.loli.net/2021/11/12/Edhsr56wxfUbuFg.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">51</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首頁</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/books/"><i class="fa-fw fas fa-book"></i><span> 读书</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">ahao</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首頁</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/books/"><i class="fa-fw fas fa-book"></i><span> 读书</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">EventLoop和线程模型</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-10-06T05:36:41.000Z" title="发表于 2021-10-06 13:36:41">2021-10-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-12-24T08:54:45.226Z" title="更新于 2021-12-24 16:54:45">2021-12-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Netty/">Netty</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">7.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>25分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="EventLoop和线程模型"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Netty-Reactor-模型之单线程模型"><a href="#Netty-Reactor-模型之单线程模型" class="headerlink" title="Netty Reactor 模型之单线程模型"></a>Netty Reactor 模型之单线程模型</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>不同的线程模式，对于程序的性能差别是很大的，目前存在的线程模式主要有两种，分别是<strong>传统堵塞 I/O 服务模型</strong>和 <strong>Reactor 模型</strong>。其中又根据 Reactor 的数量和处理资源池线程的数量不同具体分为以下几种模型，具体如下：</p>
+<ol>
+<li>单 Reactor 单线程；</li>
+<li>单 Reactor 多线程；</li>
+<li>主从 Reactor 多线程。</li>
+</ol>
+<p>本节内容，主要讲解<strong>传统堵塞 I/O 模型</strong>和<strong>单 Reactor 单线程模型</strong>的核心原理。</p>
+<h2 id="学习目的"><a href="#学习目的" class="headerlink" title="学习目的"></a>学习目的</h2><p>学习 Reactor 模型的好处在于可以知道传统的 I/O 的性能瓶颈在哪里，应该如何去提升性能。Reactor 模型只是纯理论上的东西，不涉及具体代码，并且它并不是只是针对 Netty 的一种理论，而是针对涉及 IO、涉及通信都需要去了解的理论方面的知识。包括常见知名的中间件 Redis、Nginx 等也都是基于这些线程模型去进行优化升级。</p>
+<h2 id="传统堵塞-I-O-模型"><a href="#传统堵塞-I-O-模型" class="headerlink" title="传统堵塞 I/O 模型"></a>传统堵塞 I/O 模型</h2><h3 id="模型介绍"><a href="#模型介绍" class="headerlink" title="模型介绍"></a>模型介绍</h3><p><img src="https://s2.loli.net/2021/12/24/IKGlpFwuC12n6VR.png" alt="图片描述"></p>
+<p>上图是传统堵塞模型的模型图，其特点如下所示：</p>
+<ol>
+<li>每个客户端连接服务端时，服务端都会为客户端开辟一个线程专门处理其对应的业务请求；</li>
+<li>每个线程独立完成其对应的客户端业务，读取数据、处理数据、响应数据，线程之间互不干扰；</li>
+<li>如果某个客户端长时间没有请求数据时，那么服务端也不会释放线程，而是线程处于堵塞状态。</li>
+</ol>
+<p>Socket 编程就是传统 I/O 堵塞模型，其缺点也非常的明显，具体如下：</p>
+<ol>
+<li>如果客户端数量很大的情况，会为每个客户端都创建独立子线程，那么将消耗服务器大量的资源，增加 CPU 的工作压力，子线程虽然能提高处理速度，但是使用不合理反而降低服务器的性能；</li>
+<li>如果某个客户端没有请求时，它还占用了服务器的资源，负责处理它业务的线程没有得到释放，而是一直堵塞于 <strong>read()</strong> 方法，直到下一次的请求进来。</li>
+</ol>
+<h3 id="模型优化"><a href="#模型优化" class="headerlink" title="模型优化"></a>模型优化</h3><blockquote>
+<p>思考：针对传统的 I/O 模型的两个缺点，应该如何优化呢？</p>
+</blockquote>
+<p>主要从两个方面进行改造，具体如下：</p>
+<ol>
+<li><strong>I/O 多路复用：</strong> 它是操作系统级别的机制，大概原理是客户端连接时直接注册到操作系统的内核，当某个连接有新的数据可以处理时，操作系统通知应用程序，应用程序从堵塞状态切换到读取状态，开始进行业务处理。这种模型也叫反应器模型、分发者模式（Dispatcher）、通知这模式（notifier）。如果所有客户端都没有数据可处理时，应用程序只需要堵塞一个地方即可，相比<strong>传统 I/O 模型</strong>堵塞于各个线程的 <strong>read()</strong> 方法，这种模型的性能提高了很多；</li>
+<li><strong>线程池复用线程资源：</strong> 应用程序读取数据时，通过线程池创建子线程去处理业务、响应业务，处理完成之后自动释放线程，这样的好处在于 1）无需针对每个客户端独立创建子线程；2）子线程处理完成之后自动释放资源，而不是占着资源不释放，增加 CPU 的开销。</li>
+</ol>
+<p><strong>架构图如下所示：</strong></p>
+<p><img src="https://s2.loli.net/2021/12/24/BPDcs4A3SHEReNf.png" alt="图片描述"></p>
+<p><strong>以上架构图分析：</strong></p>
+<ol>
+<li>多路复用器专门负责客户端请求的监听、读取数据、分发数据，但是不负责具体的业务处理；</li>
+<li>业务处理是非常的复杂且耗时的，直接丢给线程池去负责处理；</li>
+<li>整个架构的堵塞点在多路复用器，线程池则不会堵塞，如果没用客户端事件时，线程池可以释放去做别的事情；</li>
+<li>通过以上的改造，那么整体的架构的性能就会得到不少提升。</li>
+</ol>
+<h2 id="单-Reactor-单线程"><a href="#单-Reactor-单线程" class="headerlink" title="单 Reactor 单线程"></a>单 Reactor 单线程</h2><p>单 Reactor 单线程模型，和上面的模型优化思路是类似的，具体如下：</p>
+<p><img src="http://img.mukewang.com/wiki/5f365f4a09114ba710130524.jpg" alt="图片描述"></p>
+<p><strong>架构图说明</strong></p>
+<ol>
+<li>Select 是 I/O 多路复用模型的标准网络编程 API，可以实现应用程序通过一个堵塞对象监听多路连接请求。Reactor 对象通过 Select 监听客户端请求事件，收到事件之后通过 Dispatch 进行分发；</li>
+<li>如果事件类型是连接请求事件，则由 Acceptor 处理连接请求；</li>
+<li>如果事件类型是普通业务（比如：客户端发送业务请求），则创建 Handler 来读取数据、业务处理、响应数据。</li>
+</ol>
+<p>这种模式架构简单，但是存在以下缺点，具体如下：</p>
+<ol>
+<li>如果客户端的连接数量很多的情况下，将无法支撑，因为负责处理客户端请求的 Reactor 只有一个；</li>
+<li>负责处理业务的 Handler 只有一个，也就是说只有一个子线程负责处理具体业务，无法很好的利用多核 CPU 的性能；</li>
+<li>如果线程出现问题，比如：意外终止、进入死循环，那么整个系统的通讯功能将会收到影响，造成通讯故障。</li>
+</ol>
+<p>单 Reactor 单线程模型，一般适用于客户端数量比较少，业务处理复杂度很低，处理起来速度非常快的情况，因此真实业务场景不太建议使用。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本节主要掌握的知识点</p>
+<ol>
+<li>常见的线程模型主要分为传统的 IO 模型和 Reactor 模型；</li>
+<li>Reactor 模型又细分单 Reactor 单线程模型、单 Reactor 多线程模型、主从多线程模型；</li>
+<li>传统 IO 模型的缺点是什么，应该如何去优化；</li>
+<li>单 Reactor 单线程的模型原理是什么，有什么优缺点。</li>
+</ol>
+<h1 id="Netty-Reactor-模型之多线程模型"><a href="#Netty-Reactor-模型之多线程模型" class="headerlink" title="Netty Reactor 模型之多线程模型"></a>Netty Reactor 模型之多线程模型</h1><h2 id="前言-1"><a href="#前言-1" class="headerlink" title="前言"></a>前言</h2><p>回顾上节，我们了解了什么是传统堵塞 I/O 模型，什么是单 Reactor 单线程模型，以及它们的缺点，本节内容主要是针对单 Reactor 单线程模型的缺点进行升级，让它的性能得到进一步的提高。</p>
+<h2 id="如何进行优化"><a href="#如何进行优化" class="headerlink" title="如何进行优化"></a>如何进行优化</h2><blockquote>
+<p>首先，我们思考一下单 Reactor 单线程的性能瓶颈在哪里？</p>
+</blockquote>
+<p>主要有以下两个方面的性能上的缺点：</p>
+<ol>
+<li>整个流程处理都是单线程，包括：监听客户端连接、分发客户端请求、处理客户端请求及响应，整个流程非常的复杂和耗时，只有一个线程的话，如果客户端数量比较多，那么将处理不过来；</li>
+<li>客户端的监听、请求分发和业务处理耦合一起，业务处理将是一个未知的东西，如果这个业务很复杂需要连接数据库，并且操作好几张表，那么可能将会耗时相对的长，那么将会影响其他的客户端请求。</li>
+</ol>
+<p>针对单 Reactor 单线程的两个缺点，本节我们主要针对<strong>第二个缺点</strong>来进行改造，其实一般提到线程模型的概念，一般都喜欢结合生活当中的<strong>饭店经营模式</strong>这个俗套来进行说明，可以加深同学们的印象。</p>
+<ol>
+<li><strong>单 Reactor 单线程模型：</strong> 好比一个小饭馆，老板既要招待客人又要炒菜，老板服务效率既然很低，挣的钱既然不会太多；</li>
+<li><strong>单 Reactor 多线程模型：</strong> 老板专门招待客人，并且把客人的点菜传达给后厨，后厨有多个厨师负责炒菜，这样的话，炒菜的速度既然提高，客人也会觉得满意；</li>
+<li><strong>主从多线程模式：</strong> 虽然有多个厨师负责炒菜，但是前台只要一个人在忙活，即使后厨炒菜速度很快，那么给客户上菜的效率也会受到影响，如果客户爆满的话，服务员只能累死的份了，那怎么办呢？增加服务员的人数不就解决问题了。</li>
+</ol>
+<h2 id="单-Reactor-多线程模型"><a href="#单-Reactor-多线程模型" class="headerlink" title="单 Reactor 多线程模型"></a>单 Reactor 多线程模型</h2><p><img src="https://s2.loli.net/2021/12/24/qtTJNFsUrfR8ou7.png" alt="图片描述"></p>
+<p><strong>架构图说明：</strong></p>
+<ol>
+<li>Reactor 通过 Select 监听客户端请求事件，收到事件之后它本身不负责处理，而是把事件转发出去；</li>
+<li>如果是建立连接请求，则由 Acceptor 进行处理；</li>
+<li>如果不是建立连接请求，则转发给 Handler 负责处理；</li>
+<li>Handler 也不负责处理具体的业务，而是通过 read () 方法读取数据，然后再次分发给线程池去进行处理；</li>
+<li>线程池会分配一个子线程去处理具体的业务，处理完成之后把结果返回给 Handler，并释放连接给连接池。</li>
+</ol>
+<p><strong>模式的优点：</strong></p>
+<ol>
+<li>可以充分的利用多核 CPU 的资源，提高处理任务的性能；</li>
+<li>把业务处理从整个模型中剥离并丢给线程池去处理，避免某个业务处理或者某次业务处理太慢导致其他业务处理受到影响；</li>
+<li>相比传统 I/O 堵塞模型，如果一旦没有客户端发起请求，那么线程池将不会处于堵塞状态，而是释放并且可以处理其他的业务，对于性能调优来说，最宝贵的就是线程资源，一旦线程资源得不到释放，整个应用将会卡掉。</li>
+</ol>
+<p><strong>模式的缺点：</strong></p>
+<ol>
+<li>多线程之间的数据共享和访问比较复杂，比如：Handler 给 Worker 线程分发数据；</li>
+<li>Reactor 处理所有事件的监听、转发、响应，都是单线程，在高并发的情况下，负责处理业务的 Worker 可能正常，但是 Reactor 就会容易遇到性能瓶颈；</li>
+<li>Reactor 如果一旦出现故障，那么整个通讯就会故障。</li>
+</ol>
+<p>通过以上的分析，其实也是不推荐使用这种模式，除非客户端数量比较少，类似局域网内部的项目，但是我们还是需要了解整个模型是如何演变过来的，而不是一上来就讲解最好的那个方案。只有把整个演变过程了解了，我们才能更好的了解整个线程模型可能存在的性能瓶颈在哪里。</p>
+<h2 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h2><p>本节核心掌握的知识点</p>
+<ol>
+<li>了解单 Reactor 单线程的弊端在哪里；</li>
+<li>通过线程池的方式去解决单 Reactor 单线程存在的缺点；</li>
+<li>通过饭馆经营的案例来讲解几种 Reactor 线程模型的概念，让大家更加容易理解；</li>
+<li>介绍了什么是单 Reactor 多线程模型，以及它的优缺点是什么。</li>
+</ol>
+<h1 id="Netty-Reactor-模型之主从多线程模型"><a href="#Netty-Reactor-模型之主从多线程模型" class="headerlink" title="Netty Reactor 模型之主从多线程模型"></a>Netty Reactor 模型之主从多线程模型</h1><h2 id="前言-2"><a href="#前言-2" class="headerlink" title="前言"></a>前言</h2><p>通过上节的分析，我们知道<strong>单 Reactor 多线程模型</strong>它的性能瓶颈在于单个 Reactor，本节主要讲解如何进行优化单个 Reactor 带来的性能瓶颈问题。</p>
+<h2 id="单-Reactor-性能瓶颈"><a href="#单-Reactor-性能瓶颈" class="headerlink" title="单 Reactor 性能瓶颈"></a>单 Reactor 性能瓶颈</h2><p>单 Reactor 主要存在的性能瓶颈如下：</p>
+<ol>
+<li><strong>压力问题：</strong> 客户端数量比较多的情况，单个 Reactor 负责监听和转发，那么 Reactor 压力非常的大；</li>
+<li><strong>单点故障问题：</strong> 如果 Reactor 发生故障，则即使后面的 Handler 和 Worker 正常工作，但是整个应用程序无法正常对外提供服务。</li>
+</ol>
+<h2 id="如何进行优化-1"><a href="#如何进行优化-1" class="headerlink" title="如何进行优化"></a>如何进行优化</h2><blockquote>
+<p>思考：如何解决单 Reactor 性能问题呢？</p>
+</blockquote>
+<ol>
+<li><strong>以 Tomcat 作为案例来进行分析：</strong><br>1.1 <strong>问题：</strong> 我们平时把项目打包成 war 部署到单个 Tomcat 来进行运行，在并发量很小的情况下是正常运行的，但是一旦并发量达到 1k 以上，单个 Tomcat 就会很吃力了，那怎么办呢？<br>1.2 <strong>解决：</strong> 很简单，只需要在 Tomcat 前面加 Nginx 做负载转发，这样的话，多个 Tomcat 同时对外提供服务，不但整体的性能得到提高，即使其中一个 Tomcat 宕机，但是整个 Tomcat 集群还是能正常对外提供服务。</li>
+<li><strong>生活中饭馆的案例进行说明：</strong><br>还是以<strong>饭馆经营模型</strong>说明，方便大家更好的理解。<br>2.1 一个饭馆只有一个老板，老板即兼职服务员和厨师的工作，整体效率很低，这就是单 Reactor 单线程模型；<br>2.2 一个负责迎接客户、点菜、上菜的服务员（Reactor 线程），几个厨师负责炒菜（Worker 线程），厨师轻松了，但是服务员依然忙不过来，这就是单 Reactor 多线程模型；<br>2.3 一个负责迎接在门口迎接小妹妹（好比：Reactor 主线程），几个专门负责点菜和上菜的服务员（好比：Reactor 从线程），几个负责炒菜厨师（Worker 线程），那么每个岗位都会很轻松，并且还能服务更多的客户进行就餐，这就是主从 Reactor 多线程模型。</li>
+</ol>
+<p>其实，Reactor 模型也是类似道理，哪个环节性能存在瓶颈，那么将其功能再细分，并且增加执行数量（<strong>集群</strong>）即可。</p>
+<h2 id="主从多线程模型"><a href="#主从多线程模型" class="headerlink" title="主从多线程模型"></a>主从多线程模型</h2><p><img src="https://s2.loli.net/2021/12/24/2gnby9ZqGzwMtk7.png" alt="图片描述"></p>
+<p><strong>架构图分析：</strong></p>
+<ol>
+<li>主要分为三个模块，分别为 Reactor 主线程、Reactor 子线程、Worker 线程池。其中 Reactor 主线程可以对应多个 Reactor 子线程，也就是说，一个 MainReactor 对应多个 SubReactor；</li>
+<li>Reactor 主线程的 MainReactor 对象通过 Select 监听客户端连接事件，收到事件之后，通过 Acceptor 处理连接事件；</li>
+<li>当 Acceptor 处理连接事件之后，MainReactor 将连接事件分配给 Reactor 子线程的 SubReactor 进行处理；</li>
+<li>SubReactor 将连接加入到连接队列进行监听，并且创建 Handler 处理对应的事件。一旦有新的事件（非连接）则分配给 Handler 进行处理；</li>
+<li>Handler 通过 read () 方法读取数据，并且分发给 Worker 线程池去做业务处理；</li>
+<li>Worker 线程池分配线程去处理业务，处理完成之后把结果返回给 Handler；</li>
+<li>Handler 收到 Worker 线程返回的结果之后，再通过 send () 方法返回给客户端。</li>
+</ol>
+<p><strong>方案的优点：</strong></p>
+<ol>
+<li>责任明确，单一功能拆分的更细，Reactor 主线程负责接收请求，不负责处理请求；Reactor 子线程负责处理请求。并发量很高的情况，可以减轻单个 Reactor 的压力，并且提高处理速度；</li>
+<li>Reactor 子线程只负责读取数据和响应数据，耗时的业务处理则丢给 Worker 线程池去处理。这种通过把完整任务层层分发下去，每个组件需要处理的内容就会变的很简单，处理起来效率自然会很高。</li>
+</ol>
+<p><strong>方案的缺点：</strong></p>
+<ol>
+<li>编程复杂度非常的高；</li>
+<li>即使一个 Reactor 主线程对应多个 Reactor 子线程，Reactor 主线程还是会存在单节点故障问题，不过真实业务场景当中，如果考虑单节点故障问题的话，一般都是通过分布式集群（Netty 集群）的方式去解决，而不是靠单节点的线程模型去解决，这里大家了解一下即可。</li>
+</ol>
+<p>总的来说，主从多线程模型是应用比较多的一种线程模型，包括 Nginx 主从 Reactor 多线程模型、Memcached 主从多线程模型、Netty 主从多线程模型等知名开源框架的。</p>
+<h2 id="模型对比"><a href="#模型对比" class="headerlink" title="模型对比"></a>模型对比</h2><p>Reactor 模型和传统的 IO 模型对比</p>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">传统 IO 模型</th>
+<th align="left">Reactor 模型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">线程分配</td>
+<td align="left">为每个客户端都分配独立的线程，该线程负责全部的工作（包括：监听、读取、处理、响应）</td>
+<td align="left">统一的监听客户端请求，并且把功能细分，并且分配给不同的子线程去处理</td>
+</tr>
+<tr>
+<td align="left">堵塞点</td>
+<td align="left">在每个子线程的 read () 方法进行堵塞</td>
+<td align="left">只在 select () 堵塞，select () 是所有客户端共用的入口点</td>
+</tr>
+<tr>
+<td align="left">整体性能</td>
+<td align="left">并发量相对有限</td>
+<td align="left">可以处理高并发</td>
+</tr>
+</tbody></table>
+<p>Reactor 的整体优点如下：</p>
+<ol>
+<li>性能好，Reactor 本身虽然是同步的，但是是非堵塞的，可以快速的响应；</li>
+<li>扩展性好，可以根据 CPU 的核数来调整 Reactor 的实例个数，充分的利用 CPU 资源；</li>
+<li>复用性好，它是一种思想，可以灵活的运用到不同的中间件、底层框架上。</li>
+</ol>
+<p>三种 Reactor 线程模型对比</p>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">单 Reactor 单线程</th>
+<th align="left">单 Reactor 多线程</th>
+<th align="left">主从多线程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">功能</td>
+<td align="left">一个线程负责所有业务</td>
+<td align="left">一个线程服务监听、事件处理、转发，多个线程负责逻辑处理</td>
+<td align="left">一个线程负责监听，多个线程负责事件处理、转发，多个线程负责逻辑处理</td>
+</tr>
+<tr>
+<td align="left">线程</td>
+<td align="left">一个线程</td>
+<td align="left">一个线程，一个线程组</td>
+<td align="left">一个线程，两个线程组</td>
+</tr>
+<tr>
+<td align="left">性能</td>
+<td align="left">低</td>
+<td align="left">中</td>
+<td align="left">高</td>
+</tr>
+<tr>
+<td align="left">高可用</td>
+<td align="left">否</td>
+<td align="left">否</td>
+<td align="left">是</td>
+</tr>
+</tbody></table>
+<h2 id="小结-2"><a href="#小结-2" class="headerlink" title="小结"></a>小结</h2><p>通过这几个小节的讲解，相信大家对 Reactor 线程模型都已经有了一定的了解了，其实我们只需要了解这几种模型的架构思想即可。Reactor 它是一种思想，而并非是 Netty 所特有的，常见的中间件 Nginx、Redis 等底层通讯也都是基于 Reactor 思想去实现。只有把 Reactor 模型理解了，后期在阅读源码时才能更好的理解 Netty。</p>
+<h1 id="Netty-线程模型"><a href="#Netty-线程模型" class="headerlink" title="Netty 线程模型"></a>Netty 线程模型</h1><h2 id="前言-3"><a href="#前言-3" class="headerlink" title="前言"></a>前言</h2><p>前面几节分别讲解了 Reactor 的三种线程模型，都知道主从 Reactor 多线程模型的性能非常的好，那么 Netty 是否就是使用<strong>主从 Reactor 多线程模型</strong>呢？其实 Netty 线程模型是基于<strong>主从 Reactor 多线程模型</strong>做了一定的改造，Netty 的线程模型要比 Reactor 主从多线程模型还要复杂。本节主要是通过图解的方式逐步分析 Netty 线程模型的原理。</p>
+<h2 id="Netty-模型介绍"><a href="#Netty-模型介绍" class="headerlink" title="Netty 模型介绍"></a>Netty 模型介绍</h2><h3 id="模型介绍-1"><a href="#模型介绍-1" class="headerlink" title="模型介绍"></a>模型介绍</h3><p><img src="https://s2.loli.net/2021/12/24/6O5VTqSDsfd3PuE.png" alt="图片描述"></p>
+<p><strong>Netty 模型架构说明：</strong></p>
+<ol>
+<li>Netty 抽象出两个线程池，分别是 BossGroup 和 WorkerGroup，BossGroup 专门负责接受客户端的连接，Worker 请求处理；</li>
+<li>BossGroup 和 WorkerGroup 类型默认使用的是 NioEventLoopGroup；</li>
+<li>NioEventLoopGroup 是一个定时任务线程池，NioEventLoop 是真正工作的线程；</li>
+<li>每个 BossGroup 的 NioEventLoop 分别循环执行三个步骤<br>4.1 每个 NioEventLoop 都有一个 Selector，并且不断轮询 accept 事件；<br>4.2 处理 accept 事件，与客户端建立连接，生成 NioSocketChannel，并且将其注册到某个 WorkerGroup 下的 NioEventLoop 上的 Selector 上；<br>4.3 处理任务队列中的任务，即 runAllTasks。</li>
+<li>每个 WorkerGroup 的 NioEventLoop 分别循环执行三个步骤<br>5.1 轮询 read 和 write 事件；<br>5.2 处理 I/O 事件，即 read，write 事件，并在其对应的 NioSocketChannel 处理；<br>5.3 处理任务队列的任务，即 runAllTasks。</li>
+</ol>
+<h3 id="核心概念理解"><a href="#核心概念理解" class="headerlink" title="核心概念理解"></a>核心概念理解</h3><blockquote>
+<p><strong>Tips:</strong> 额外知识点补充，这里提前剧透一下 Channel、ChannelPipeline、ChannelHanlder 之间的关系</p>
+</blockquote>
+<ol>
+<li>每个客户端连接进来的时候，服务端都会建立一个 Channel；</li>
+<li>为每个 Channel 绑定一个 NioEventLoop 线程，该线程主要负责处理该 Channel 的业务，一个 Channel 对应一个 NioEventLoop，但是一个 NioEventLoop 可以同时服务多个 Channel；</li>
+<li>为每个 Channel 绑定一个 ChannelPipeline，它是一个业务管道，专门负责管理业务链，也就是 ChannelHandler；</li>
+<li>WorkerGroup 的核心方法是 runAllTasks ()，它主要是触发 NioEventLoop 去处理对应的 Channel 里面的 ChannelPipeline 里面的 ChannelHandler 里面的业务逻辑。</li>
+</ol>
+<h2 id="Netty-模型配置"><a href="#Netty-模型配置" class="headerlink" title="Netty 模型配置"></a>Netty 模型配置</h2><h3 id="单线程配置"><a href="#单线程配置" class="headerlink" title="单线程配置"></a>单线程配置</h3><p>在 ServerBootstrap 调用方法 group 的时候，传递的参数是同一个线程组，且在构造线程组的时候，构造参数为 1。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerNetty</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> ServerBootstrap bootstrap=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> EventLoopGroup group=<span class="keyword">null</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">        group=<span class="keyword">new</span> NioEventLoopGroup(<span class="number">1</span>);<span class="comment">//线程数量为 1</span></span><br><span class="line">        bootstrap.group(group,group);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="多线程配置"><a href="#多线程配置" class="headerlink" title="多线程配置"></a>多线程配置</h3><p>在 ServerBootstrap 调用方法 group 的时候，传递的参数是两个不同的线程组，负责监听的 acceptor 线程组的线程数为 1，负责处理客户端线程组的线程数大于 1。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerNetty</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> ServerBootstrap bootstrap=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> EventLoopGroup acceptorGroup=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> EventLoopGroup clientGroup=<span class="keyword">null</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">        acceptorGroup=<span class="keyword">new</span> NioEventLoopGroup(<span class="number">1</span>);<span class="comment">//线程数量为 1</span></span><br><span class="line">        clientGroup=<span class="keyword">new</span> NioEventLoopGroup();<span class="comment">//默认是 cpu 的核心数</span></span><br><span class="line">        bootstrap.group(acceptorGroup,clientGroup);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="主从多线程配置"><a href="#主从多线程配置" class="headerlink" title="主从多线程配置"></a>主从多线程配置</h3><p>在 ServerBootstrap 调用方法 group 的时候，传递的参数是两个不同的线程组，负责监听的 acceptor 线程组的线程数大于 1，负责处理客户端线程组的线程数大于 1。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerNetty</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> ServerBootstrap bootstrap=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> EventLoopGroup acceptorGroup=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> EventLoopGroup clientGroup=<span class="keyword">null</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">        acceptorGroup=<span class="keyword">new</span> NioEventLoopGroup();<span class="comment">//默认是 cpu 的核心数</span></span><br><span class="line">        clientGroup=<span class="keyword">new</span> NioEventLoopGroup();<span class="comment">//默认是 cpu 的核心数</span></span><br><span class="line">        bootstrap.group(acceptorGroup,clientGroup);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="自定义任务队列"><a href="#自定义任务队列" class="headerlink" title="自定义任务队列"></a>自定义任务队列</h2><p>通常情况下，任务队列中常见的任务主要有以下几种类型：</p>
+<ol>
+<li>用户自定义的异步任务，比如：依赖线程池去异步某个任务等；</li>
+<li>用户自定义的定时任务，比如：依赖定时线程池去定义每隔 n 秒执行某个任务等；</li>
+<li>非当前 reactor 线程调用 channel 的各种方法。</li>
+</ol>
+<h3 id="异步任务"><a href="#异步任务" class="headerlink" title="异步任务"></a>异步任务</h3><p>其实跟我们平时使用线程池没有什么区别，只不过调用的是底层 Netty 线程组。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用 reactor 线程的异步任务</span></span><br><span class="line">ctx.channel().eventLoop().execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用线程池去实现异步任务</span></span><br><span class="line">ExecutorService es = Executors.newFixedThreadPool(<span class="number">5</span>);</span><br><span class="line">es.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h3><p>其实类似我们平时使用的定时任务线程池（如：ScheduledThreadPool），只不过是调用底层 Netty 线程组。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用 reactor 线程实现的定时任务</span></span><br><span class="line">ctx.channel().eventLoop().schedule(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;, <span class="number">60</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用线程池去实现定时任务</span></span><br><span class="line">ScheduledExecutorService ses = Executors.newScheduledThreadPool(<span class="number">5</span>);</span><br><span class="line">ses.schedule(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;i:&quot;</span> + temp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, <span class="number">3</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>总结：</strong></p>
+<ol>
+<li>当前 reactor 线程调用当前 eventLoop 执行任务，直接执行，否则，添加到任务队列稍后执行；</li>
+<li>netty 内部的任务分为普通任务和定时任务，分别落地到 MpscQueue 和 PriorityQueue；</li>
+<li>netty 每次执行任务循环之前，会将已经到期的定时任务从 PriorityQueue 转移到 MpscQueue；</li>
+<li>netty 每隔 64 个任务检查一下是否该退出任务循环。</li>
+</ol>
+<h2 id="小结-3"><a href="#小结-3" class="headerlink" title="小结"></a>小结</h2><p>本节主要掌握的核心知识点</p>
+<ol>
+<li>Netty 的模型的理解，以及每个 NioEventLoop 所执行的三个核心操作，分别是①轮询出 IO 事件；②处理 IO 事件；③处理任务队列；</li>
+<li>了解 Channel、ChannelPipeline、ChannelHandler 之间的关系，以及 NioEventLoop 主要负责处理每个 Channel 的业务逻辑；</li>
+<li>Netty 如何配置三种 Reactor 模型；</li>
+<li>如何使用内置的 NioEventLoop 执行自定义的异步任务和定时任务。</li>
+</ol>
+<h1 id="Netty-EventLoop-事件循环机制"><a href="#Netty-EventLoop-事件循环机制" class="headerlink" title="Netty EventLoop 事件循环机制"></a>Netty EventLoop 事件循环机制</h1><h2 id="前言-4"><a href="#前言-4" class="headerlink" title="前言"></a>前言</h2><p>前面几节主要讲解了 Netty 的几种线程模型，基本上都是理论上的东西，那么 Netty 是如何去实现这些线程模型的呢？答案：核心是 EventLoop，今天我们主要介绍 EventLoop 是如何来实现线程模型的。</p>
+<h2 id="什么是-EventLoop"><a href="#什么是-EventLoop" class="headerlink" title="什么是 EventLoop"></a>什么是 EventLoop</h2><p>源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventLoop</span> <span class="keyword">extends</span> <span class="title">OrderedEventExecutor</span>, <span class="title">EventLoopGroup</span> </span>&#123;</span><br><span class="line">    <span class="function">EventLoopGroup <span class="title">parent</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventLoopGroup</span> <span class="keyword">extends</span> <span class="title">EventExecutorGroup</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventExecutorGroup</span> <span class="keyword">extends</span> <span class="title">ScheduledExecutorService</span>, <span class="title">Iterable</span>&lt;<span class="title">EventExecutor</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>通过上面的简单源码，我们发现 EventLoopGroup 就是一个线程池，它是继承 Java 并发包下的定时线程池，而 EventLoop 则是线程池里面的一个子线程。</p>
+<p>通过源码查看它们之间的关系，具体如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventLoopGroup</span> <span class="keyword">extends</span> <span class="title">EventExecutorGroup</span> </span>&#123;</span><br><span class="line">    <span class="function">EventLoop <span class="title">next</span><span class="params">()</span></span>;<span class="comment">//返回线程组里面的一个线程</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">EventLoop</span> <span class="keyword">extends</span> <span class="title">OrderedEventExecutor</span>, <span class="title">EventLoopGroup</span> </span>&#123;</span><br><span class="line">    <span class="function">EventLoopGroup <span class="title">parent</span><span class="params">()</span></span>;<span class="comment">//关联该线程所属的线程组</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>通过以上简单的分析，我们需要掌握的知识点是，Netty 是通过线程池去实现 Reactor 线程模型的，而线程池并不是使用 Java 内置的线程池，而是继承它们并且进行了一定的扩展。就是 EventLoopGroup 和 EventLoop。</p>
+<h2 id="EventLoop-的架构图"><a href="#EventLoop-的架构图" class="headerlink" title="EventLoop 的架构图"></a>EventLoop 的架构图</h2><p>EventLoop 整体的类 UML 关系图还是比较复杂的，Netty 底层主要是以 NIO 为主，因此核心掌握 NioEventLoop 和 NioEventLoopGroup 两个类的结构即可。</p>
+<p><strong>NioEventLoopGroup 关系图：</strong><br><img src="https://s2.loli.net/2021/12/24/OeIdrDZgX2TGmF5.png" alt="图片描述"></p>
+<p>以上的架构图，我们主要关心 <code>NioEventLoopGroup</code>-&gt;<code>MultithreadEventLoopGroup</code>-&gt;<code>EventLoopGroup</code>，其实这种是比较典型的接口、抽象类、实现类的模式。</p>
+<p><strong>NioEventLoop 关系图</strong><br><img src="https://s2.loli.net/2021/12/24/ZFK7DWLNfOpgv8P.png" alt="图片描述"></p>
+<p>以上的架构图，我们主要关心的是 <code>NioEventLoop</code>-&gt;<code>SingleThreadEventLoop</code>-&gt;<code>EventLoop</code>，它也是典型的接口、抽象类、实现类的模式。</p>
+<h2 id="EventLoop-的核心原理"><a href="#EventLoop-的核心原理" class="headerlink" title="EventLoop 的核心原理"></a>EventLoop 的核心原理</h2><p>下面，我们将通过源码的方式介绍 EventLoop 在 Netty 当中是如何运行的。<br>首先，我们需要了解 EventLoop 三个核心步骤，如下图所示：<br><img src="https://s2.loli.net/2021/12/24/W6Tye7m8IkXSwYA.png" alt="图片描述"></p>
+<h3 id="EventLoop-的核心作用"><a href="#EventLoop-的核心作用" class="headerlink" title="EventLoop 的核心作用"></a>EventLoop 的核心作用</h3><p>EventLoop 的核心作用是，一定客户端连接进来，则服务端给其分配一个 Channel（连接通道），并且会给 Channel 分配一个 EventLoop 和 ChannelPipeline。其中，EventLoop 主要负责该 Channel 相关的业务逻辑处理的，ChannelPipeline 则负责管理业务逻辑（双向链表）。ChannelPipleline 下一个章节会详细讲解。</p>
+<p>EventLoop 的核心功能是处理 Channel 相关的业务逻辑，它里面其实是一个死循环，重复做着 3 个事件，分别是</p>
+<ol>
+<li>监控端口；</li>
+<li>处理端口事件，将其分发；</li>
+<li>处理队列事件。</li>
+</ol>
+<blockquote>
+<p>核心结论：每个 EventLoop 可以被绑定到多个 Channel 身上，但是一个 Channel 有且仅有一个 EventLoop 与之进行对应。</p>
+</blockquote>
+<h3 id="NioEventLoop-初始化流程"><a href="#NioEventLoop-初始化流程" class="headerlink" title="NioEventLoop 初始化流程"></a>NioEventLoop 初始化流程</h3><p>这里，我们将通过核心源码来梳理一下 <code>NioEventLoopGroup</code> 的初始化流程，也就是线程池的初始化。</p>
+<p>实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">NioEventLoopGroup bossGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">NioEventLoopGroup workerGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line"></span><br><span class="line">ServerBootstrap serverBootstrap = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line">serverBootstrap</span><br><span class="line">    .group(bossGroup, workerGroup);</span><br><span class="line"><span class="comment">//省略其它代码</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第一步：</strong> 进入 NioEventLoopGroup 构造函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioEventLoopGroup</span> <span class="keyword">extends</span> <span class="title">MultithreadEventLoopGroup</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">NioEventLoopGroup</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//构造函数一直跟进</span></span><br><span class="line">        <span class="keyword">this</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">NioEventLoopGroup</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> nThreads, Executor executor, </span></span></span><br><span class="line"><span class="function"><span class="params">        SelectorProvider selectorProvider, </span></span></span><br><span class="line"><span class="function"><span class="params">        SelectStrategyFactory selectStrategyFactory)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//调用父类的构造函数，点进去，查看源码</span></span><br><span class="line">        <span class="keyword">super</span>(nThreads, executor, </span><br><span class="line">              <span class="keyword">new</span> Object[]&#123;selectorProvider, selectStrategyFactory, </span><br><span class="line">                           RejectedExecutionHandlers.reject()&#125;);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第二步：</strong> MultithreadEventLoopGroup 构造函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">MultithreadEventLoopGroup</span> <span class="keyword">extends</span> <span class="title">MultithreadEventExecutorGroup</span> <span class="keyword">implements</span> <span class="title">EventLoopGroup</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">MultithreadEventLoopGroup</span><span class="params">(<span class="keyword">int</span> nThreads, Executor executor, Object... args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//调用父类的构造函数，点进去，查看源码</span></span><br><span class="line">        <span class="keyword">super</span>(nThreads == <span class="number">0</span> ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第三步：</strong> MultithreadEventExecutorGroup 构造函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">MultithreadEventExecutorGroup</span> <span class="keyword">extends</span> <span class="title">AbstractEventExecutorGroup</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">   	<span class="comment">//构造函数</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="title">MultithreadEventExecutorGroup</span><span class="params">(<span class="keyword">int</span> nThreads, ThreadFactory threadFactory, Object... args)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">//点击跟进</span></span><br><span class="line">        <span class="keyword">this</span>(nThreads, </span><br><span class="line">             (Executor)(threadFactory == <span class="keyword">null</span> ? <span class="keyword">null</span> : <span class="keyword">new</span> ThreadPerTaskExecutor(threadFactory)), </span><br><span class="line">             args);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//核心，在这里进行 “线程组” 初始化工作</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> EventExecutor[] children;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">MultithreadEventExecutorGroup</span><span class="params">(<span class="keyword">int</span> nThreads, Executor executor, </span></span></span><br><span class="line"><span class="function"><span class="params">                                            EventExecutorChooserFactory chooserFactory, Object... args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//省略了其它代码，只保留核心部分</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">//1.创建一个数组，长度是 nThreads</span></span><br><span class="line">		<span class="keyword">this</span>.children = <span class="keyword">new</span> EventExecutor[nThreads];</span><br><span class="line">        <span class="comment">//2.数组初始化值</span></span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nThreads; ++i) &#123;</span><br><span class="line">            <span class="comment">//通过 this.newChild() 来创建具体“线程”</span></span><br><span class="line">            <span class="keyword">this</span>.children[i] = <span class="keyword">this</span>.newChild((Executor)executor, args);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//newChild 是一个抽象类，由子类去进行实现</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> EventExecutor <span class="title">newChild</span><span class="params">(Executor var1, Object... var2)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第四步：</strong> 由子类 NioEventLoopGroup 去实现 newChild () 抽象方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioEventLoopGroup</span> <span class="keyword">extends</span> <span class="title">MultithreadEventLoopGroup</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">protected</span> EventLoop <span class="title">newChild</span><span class="params">(Executor executor, Object... args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    	<span class="comment">//创建一个 NioEventLoop</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> NioEventLoop(<span class="keyword">this</span>, executor, </span><br><span class="line">                                (SelectorProvider)args[<span class="number">0</span>], 	</span><br><span class="line">                                ((SelectStrategyFactory)args[<span class="number">1</span>]).newSelectStrategy(), </span><br><span class="line">                                (RejectedExecutionHandler)args[<span class="number">2</span>]);</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line">	</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>到这里，我们终于看到 NioEventLoop 的身影了，在 newChild () 去进行初始化工作。</p>
+<h3 id="NioEventLoop-执行流程"><a href="#NioEventLoop-执行流程" class="headerlink" title="NioEventLoop 执行流程"></a>NioEventLoop 执行流程</h3><p>上面讲解了 NioEventLoop 的初始化流程，那么它到底在什么时候开始执行的呢？</p>
+<p>源码入口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">serverBootstrap.bind(<span class="number">80</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第一步：</strong> 抽象类 AbstractBootstrap</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractBootstrap</span>&lt;<span class="title">B</span> <span class="keyword">extends</span> <span class="title">AbstractBootstrap</span>&lt;<span class="title">B</span>, <span class="title">C</span>&gt;, <span class="title">C</span> <span class="keyword">extends</span> <span class="title">Channel</span>&gt; <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> ChannelFuture <span class="title">bind</span><span class="params">(<span class="keyword">int</span> inetPort)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.bind(<span class="keyword">new</span> InetSocketAddress(inetPort));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> ChannelFuture <span class="title">bind</span><span class="params">(SocketAddress localAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.validate();</span><br><span class="line">        <span class="keyword">if</span> (localAddress == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(<span class="string">&quot;localAddress&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//继续跟进</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>.doBind(localAddress);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> ChannelFuture <span class="title">doBind</span><span class="params">(<span class="keyword">final</span> SocketAddress localAddress)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//继续跟进</span></span><br><span class="line">        <span class="keyword">final</span> ChannelFuture regFuture = <span class="keyword">this</span>.initAndRegister();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">final</span> ChannelFuture <span class="title">initAndRegister</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//继续跟进</span></span><br><span class="line">        <span class="keyword">this</span>.init(channel);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//抽象方法</span></span><br><span class="line">    <span class="function"><span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(Channel var1)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第二步：</strong> 实现类 ServerBootstrap</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerBootstrap</span> <span class="keyword">extends</span> <span class="title">AbstractBootstrap</span>&lt;<span class="title">ServerBootstrap</span>, <span class="title">ServerChannel</span>&gt; </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">//1.把 ChannelHandler 添加到 ChannelPipeline 里，组成一条双向业务链表</span></span><br><span class="line">        p.addLast(<span class="keyword">new</span> ChannelHandler[]&#123;<span class="keyword">new</span> ChannelInitializer&lt;Channel&gt;() &#123;</span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(Channel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                <span class="comment">//1.1.管道</span></span><br><span class="line">                <span class="keyword">final</span> ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line">                <span class="comment">//1.2.添加到管道</span></span><br><span class="line">                ChannelHandler handler = ServerBootstrap.<span class="keyword">this</span>.config.handler();</span><br><span class="line">                <span class="keyword">if</span> (handler != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> ChannelHandler[]&#123;handler&#125;);</span><br><span class="line">                &#125;</span><br><span class="line">				<span class="comment">//1.3.执行线程池的 “execute()”，核心入口</span></span><br><span class="line">                ch.eventLoop().execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                        pipeline.addLast(</span><br><span class="line">                            <span class="keyword">new</span> ChannelHandler[]&#123;</span><br><span class="line">                                <span class="keyword">new</span> ServerBootstrap.ServerBootstrapAcceptor(</span><br><span class="line">                                    currentChildGroup, </span><br><span class="line">                                    currentChildHandler, </span><br><span class="line">                                    currentChildOptions, </span><br><span class="line">                                    currentChildAttrs)</span><br><span class="line">                            &#125;</span><br><span class="line">                        );</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这里是在 init () 方法里面进行一序列的初始化工作，并且执行上面初始化好的 NioEventLoop 的 execute () 方法。</p>
+<p><strong>第三步：</strong> 执行 SingleThreadEventExecutor 的 execute () 方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SingleThreadEventExecutor</span> <span class="keyword">extends</span> <span class="title">AbstractScheduledEventExecutor</span> <span class="keyword">implements</span> <span class="title">OrderedEventExecutor</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable task)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//是否是当前线程</span></span><br><span class="line">		<span class="keyword">boolean</span> inEventLoop = <span class="keyword">this</span>.inEventLoop();</span><br><span class="line">		<span class="keyword">if</span> (inEventLoop) &#123;</span><br><span class="line">            <span class="comment">//如果是当前线程，则添加任务到队列</span></span><br><span class="line">			<span class="keyword">this</span>.addTask(task);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//如果不是当前线程，则先启动线程</span></span><br><span class="line">			<span class="keyword">this</span>.startThread();</span><br><span class="line">            <span class="comment">//把任务添加到任务队列</span></span><br><span class="line">			<span class="keyword">this</span>.addTask(task);</span><br><span class="line">            <span class="comment">//如果线程已经关闭并且该任务已经被移除了</span></span><br><span class="line">			<span class="keyword">if</span> (<span class="keyword">this</span>.isShutdown() &amp;&amp; <span class="keyword">this</span>.removeTask(task)) &#123;</span><br><span class="line">                <span class="comment">//执行拒绝策略</span></span><br><span class="line">				reject();</span><br><span class="line">			&#125;</span><br><span class="line">         &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startThread</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.doStartThread();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doStartThread</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.executor.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">//执行 run() 方法</span></span><br><span class="line">                SingleThreadEventExecutor.<span class="keyword">this</span>.run();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//抽象方法</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第四步：</strong> 子类 NioEventLoop 实现抽象方法 run ()，这里是 run () 方法是一个死循环，并且执行三个核心事件，分别是 “监听端口”、“处理端口事件”、“处理队列事件”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">NioEventLoop</span> <span class="keyword">extends</span> <span class="title">SingleThreadEventLoop</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="comment">//省略</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>run () 方法里面核心执行了 <code>this.processSelectedKeys()</code> 和 <code>this.runAllTasks()</code>。</p>
+<h3 id="核心总结"><a href="#核心总结" class="headerlink" title="核心总结"></a>核心总结</h3><p>每次执行 execute () 时，都是向队列里面添加任务，当第一次添加时则先启动线程，并且执行子类 NioEventLoop 的 run () 方法。而该 run () 是整个 EventLoop 的核心，主要的核心功能如下：</p>
+<ol>
+<li><code>this.select()</code>，该方法是一个堵塞方法，主要是监听客户端事件；</li>
+<li><code>this.processSelectedKeys()</code>，该方法获取监听到的客户端事件，并将其进行分发；</li>
+<li><code>this.runAllTasks()</code>，执行队列里面的任务。</li>
+</ol>
+<h2 id="小结-4"><a href="#小结-4" class="headerlink" title="小结"></a>小结</h2><p>本节主要是讲解 EventLoop，它是 Netty 的线程模型的核心，Netty 已经帮我们进行了高度的封装，不需要懂得其原理也不会影响 Netty 的使用，但是如果能了解其核心原理，可以让我们更加深刻的理解 Netty 是如何运转的。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">ahao</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://ahao.ink/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/">https://ahao.ink/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://ahao.ink" target="_blank">ahao</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://i.loli.net/2021/11/12/6zSDdqXlvjMakgC.jpg" target="_blank"><img class="post-qr-code-img" src="https://i.loli.net/2021/11/12/6zSDdqXlvjMakgC.jpg" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="https://i.loli.net/2021/11/12/Xa5GvktA3qi7VYN.jpg" target="_blank"><img class="post-qr-code-img" src="https://i.loli.net/2021/11/12/Xa5GvktA3qi7VYN.jpg" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/Netty%E5%85%A5%E9%97%A8%E6%A1%88%E4%BE%8B/"><img class="next-cover" src="https://s2.loli.net/2021/12/24/rBWnxc1ZRTyb3Gd.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Netty 入门案例</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-info-avatar is-center"><img class="avatar-img" src="https://i.loli.net/2021/11/12/Edhsr56wxfUbuFg.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-info__name">ahao</div><div class="author-info__description">如有一味绝境，非历十方生死</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">51</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a></div><div class="card-info-data-item is-center"><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div></div><a class="button--animated" id="card-info-btn" href="https://ahao.ink"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">好 记 性 不 如 烂 笔 头</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Netty-Reactor-%E6%A8%A1%E5%9E%8B%E4%B9%8B%E5%8D%95%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">Netty Reactor 模型之单线程模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E7%9A%84"><span class="toc-number">1.2.</span> <span class="toc-text">学习目的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%A0%E7%BB%9F%E5%A0%B5%E5%A1%9E-I-O-%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.3.</span> <span class="toc-text">传统堵塞 I&#x2F;O 模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.3.1.</span> <span class="toc-text">模型介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E4%BC%98%E5%8C%96"><span class="toc-number">1.3.2.</span> <span class="toc-text">模型优化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95-Reactor-%E5%8D%95%E7%BA%BF%E7%A8%8B"><span class="toc-number">1.4.</span> <span class="toc-text">单 Reactor 单线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">1.5.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Netty-Reactor-%E6%A8%A1%E5%9E%8B%E4%B9%8B%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">Netty Reactor 模型之多线程模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80-1"><span class="toc-number">2.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E4%BC%98%E5%8C%96"><span class="toc-number">2.2.</span> <span class="toc-text">如何进行优化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95-Reactor-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.3.</span> <span class="toc-text">单 Reactor 多线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93-1"><span class="toc-number">2.4.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Netty-Reactor-%E6%A8%A1%E5%9E%8B%E4%B9%8B%E4%B8%BB%E4%BB%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">Netty Reactor 模型之主从多线程模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80-2"><span class="toc-number">3.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95-Reactor-%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88"><span class="toc-number">3.2.</span> <span class="toc-text">单 Reactor 性能瓶颈</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E4%BC%98%E5%8C%96-1"><span class="toc-number">3.3.</span> <span class="toc-text">如何进行优化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.4.</span> <span class="toc-text">主从多线程模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94"><span class="toc-number">3.5.</span> <span class="toc-text">模型对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93-2"><span class="toc-number">3.6.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Netty-%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-number">4.</span> <span class="toc-text">Netty 线程模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80-3"><span class="toc-number">4.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Netty-%E6%A8%A1%E5%9E%8B%E4%BB%8B%E7%BB%8D"><span class="toc-number">4.2.</span> <span class="toc-text">Netty 模型介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E4%BB%8B%E7%BB%8D-1"><span class="toc-number">4.2.1.</span> <span class="toc-text">模型介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3"><span class="toc-number">4.2.2.</span> <span class="toc-text">核心概念理解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Netty-%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE"><span class="toc-number">4.3.</span> <span class="toc-text">Netty 模型配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%95%E7%BA%BF%E7%A8%8B%E9%85%8D%E7%BD%AE"><span class="toc-number">4.3.1.</span> <span class="toc-text">单线程配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E9%85%8D%E7%BD%AE"><span class="toc-number">4.3.2.</span> <span class="toc-text">多线程配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E9%85%8D%E7%BD%AE"><span class="toc-number">4.3.3.</span> <span class="toc-text">主从多线程配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97"><span class="toc-number">4.4.</span> <span class="toc-text">自定义任务队列</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1"><span class="toc-number">4.4.1.</span> <span class="toc-text">异步任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="toc-number">4.4.2.</span> <span class="toc-text">定时任务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93-3"><span class="toc-number">4.5.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Netty-EventLoop-%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E6%9C%BA%E5%88%B6"><span class="toc-number">5.</span> <span class="toc-text">Netty EventLoop 事件循环机制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80-4"><span class="toc-number">5.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-EventLoop"><span class="toc-number">5.2.</span> <span class="toc-text">什么是 EventLoop</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#EventLoop-%E7%9A%84%E6%9E%B6%E6%9E%84%E5%9B%BE"><span class="toc-number">5.3.</span> <span class="toc-text">EventLoop 的架构图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#EventLoop-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86"><span class="toc-number">5.4.</span> <span class="toc-text">EventLoop 的核心原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#EventLoop-%E7%9A%84%E6%A0%B8%E5%BF%83%E4%BD%9C%E7%94%A8"><span class="toc-number">5.4.1.</span> <span class="toc-text">EventLoop 的核心作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NioEventLoop-%E5%88%9D%E5%A7%8B%E5%8C%96%E6%B5%81%E7%A8%8B"><span class="toc-number">5.4.2.</span> <span class="toc-text">NioEventLoop 初始化流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NioEventLoop-%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">5.4.3.</span> <span class="toc-text">NioEventLoop 执行流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%80%BB%E7%BB%93"><span class="toc-number">5.4.4.</span> <span class="toc-text">核心总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93-4"><span class="toc-number">5.5.</span> <span class="toc-text">小结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="EventLoop和线程模型"><img src="https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="EventLoop和线程模型"/></a><div class="content"><a class="title" href="/posts/EventLoop%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="EventLoop和线程模型">EventLoop和线程模型</a><time datetime="2021-10-06T05:36:41.000Z" title="发表于 2021-10-06 13:36:41">2021-10-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/Netty%E5%85%A5%E9%97%A8%E6%A1%88%E4%BE%8B/" title="Netty 入门案例"><img src="https://s2.loli.net/2021/12/24/rBWnxc1ZRTyb3Gd.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Netty 入门案例"/></a><div class="content"><a class="title" href="/posts/Netty%E5%85%A5%E9%97%A8%E6%A1%88%E4%BE%8B/" title="Netty 入门案例">Netty 入门案例</a><time datetime="2021-09-30T05:36:41.000Z" title="发表于 2021-09-30 13:36:41">2021-09-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/Netty%20%E5%BF%83%E8%B7%B3%E6%A3%80%E6%B5%8B/" title="Netty 心跳检测"><img src="https://s2.loli.net/2021/12/24/gYjCcwFdvQypA4b.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Netty 心跳检测"/></a><div class="content"><a class="title" href="/posts/Netty%20%E5%BF%83%E8%B7%B3%E6%A3%80%E6%B5%8B/" title="Netty 心跳检测">Netty 心跳检测</a><time datetime="2021-09-30T05:36:41.000Z" title="发表于 2021-09-30 13:36:41">2021-09-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" title="序列化和反序列化到底有什么用呢？"><img src="https://s2.loli.net/2021/12/24/V7zmByD8F6fj3As.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="序列化和反序列化到底有什么用呢？"/></a><div class="content"><a class="title" href="/posts/%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" title="序列化和反序列化到底有什么用呢？">序列化和反序列化到底有什么用呢？</a><time datetime="2021-09-30T05:36:41.000Z" title="发表于 2021-09-30 13:36:41">2021-09-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/%E6%95%B0%E6%8D%AE%E7%BC%93%E5%AD%98/" title="Netty 数据缓存"><img src="https://s2.loli.net/2021/12/24/V7zmByD8F6fj3As.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Netty 数据缓存"/></a><div class="content"><a class="title" href="/posts/%E6%95%B0%E6%8D%AE%E7%BC%93%E5%AD%98/" title="Netty 数据缓存">Netty 数据缓存</a><time datetime="2021-09-30T05:36:41.000Z" title="发表于 2021-09-30 13:36:41">2021-09-30</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://s2.loli.net/2021/12/24/oU8bJKuwTrD4pN3.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By ahao</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://ahao.ink" target="_self">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'oKBwwKX9hp2tpOKDPE3PVQpL-gzGzoHsz',
+      appKey: '3QBBKGzgsE11VOcVl1RElhgu',
+      placeholder: '说点什么吧~',
+      avatar: 'retro',
+      meta: 'nick,mail,link'.split(','),
+      pageSize: '10',
+      lang: 'zh-CN',
+      recordIP: true,
+      serverURLs: '',
+      emojiCDN: '//i0.hdslb.com/bfs/emote/',
+      emojiMaps: {"tv_doge":"6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png","tv_親親":"a8111ad55953ef5e3be3327ef94eb4a39d535d06.png","tv_偷笑":"bb690d4107620f1c15cff29509db529a73aee261.png","tv_再見":"180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png","tv_冷漠":"b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png","tv_發怒":"34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png","tv_發財":"34db290afd2963723c6eb3c4560667db7253a21a.png","tv_可愛":"9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png","tv_吐血":"09dd16a7aa59b77baa1155d47484409624470c77.png","tv_呆":"fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png","tv_嘔吐":"9f996894a39e282ccf5e66856af49483f81870f3.png","tv_困":"241ee304e44c0af029adceb294399391e4737ef2.png","tv_壞笑":"1f0b87f731a671079842116e0991c91c2c88645a.png","tv_大佬":"093c1e2c490161aca397afc45573c877cdead616.png","tv_大哭":"23269aeb35f99daee28dda129676f6e9ea87934f.png","tv_委屈":"d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png","tv_害羞":"a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png","tv_尷尬":"7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png","tv_微笑":"70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png","tv_思考":"90cf159733e558137ed20aa04d09964436f618a1.png","tv_驚嚇":"0d15c7e2ee58e935adc6a7193ee042388adc22af.png"},
+      enableQQ: true,
+      path: window.location.pathname,
+      requiredFields: ["nick,mail"],
+      visitor: false
+    }, null))
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Valine' === 'Valine' || !true) {
+  if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><div class="aplayer no-destroy" data-id="000PeZCQ1i4XVs" data-server="tencent" data-type="artist" data-fixed="true" data-mini="true" data-listFolded="false" data-order="random" data-preload="none" data-autoplay="true" muted></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="false"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // Analytics
+  if (false) {
+    MtaH5.pgv()
+  }
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+
+document.addEventListener('pjax:send', function () {
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
